@@ -1,0 +1,8 @@
+{
+  "error": {
+    "key": "bad_request",
+    "message": "No 2FA token found in JSON payload",
+    "hint": null
+  },
+  "took": 0.003
+}
