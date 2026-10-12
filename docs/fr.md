@@ -1,67 +1,190 @@
-# Template de démonstration
+# Pi-hole
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Suivez et pilotez le blocage des publicités de votre
+[Pi-hole](https://pi-hole.net) depuis Gladys, sur votre réseau local : mettez-le
+en pause cinq minutes depuis le tableau de bord quand un site ne fonctionne
+plus, voyez ce qu'il a bloqué sur les dernières 24 heures, et soyez prévenu
+quand il ne répond plus ou qu'une mise à jour est sortie.
 
-## Ce que vous obtenez
+> **Développée sans le matériel : vos retours sont les bienvenus.** Cette
+> intégration a été construite et testée sur les réponses documentées par
+> Pi-hole (la spécification OpenAPI de Pi-hole v6), pas sur un vrai serveur. Si
+> quelque chose ne marche pas comme décrit, dites-le sur le
+> [forum Gladys](https://community.gladysassistant.com) ou dans les
+> [issues](https://github.com/guim31/gladys-pihole/issues).
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+## Ce qu'il vous faut
 
-## Configuration
+- Gladys Assistant 5.1.0 ou plus récent (5.2.0 ou plus récent pour le bouton
+  _Pause…_ du widget).
+- **Pi-hole v6** ou plus récent, joignable depuis Gladys. Pi-hole v5 n'est pas
+  pris en charge : il est détecté et signalé dans l'écran Configuration.
+- Un **mot de passe d'application** de votre Pi-hole (conseillé), ou le mot de
+  passe de son interface web, ou rien si votre Pi-hole n'a pas de mot de passe.
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+Pour créer un mot de passe d'application, ouvrez l'interface web de Pi-hole :
+**Settings** → **Web interface / API**, passez la page en mode **Expert** (en
+haut à droite), puis **Configure app password** → **Enable new app password**.
+Copiez le mot de passe affiché : Pi-hole ne le montre qu'une fois. Un mot de
+passe d'application fonctionne aussi quand la double authentification est
+active, ce que ne permet pas le mot de passe de l'interface web.
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+## Mise en route
 
-## Actions
+1. Installez l'intégration depuis le catalogue de Gladys.
+2. Dans **Configuration**, saisissez l'**Adresse** de votre Pi-hole (par exemple
+   `192.168.1.2`, ou `https://192.168.1.2` en HTTPS), son **Mot de passe
+   d'application**, et si vous le souhaitez un **Nom**. Deux ou trois serveurs
+   Pi-hole ? Remplissez aussi les sections _Deuxième Pi-hole_ et _Troisième
+   Pi-hole_.
+3. Enregistrez, puis cliquez sur **Tester la connexion** : le message sous le
+   bouton indique, pour chaque serveur, s'il répond, sa version et l'état de son
+   blocage.
+4. Ouvrez l'onglet **Découverte** : un appareil par Pi-hole. Cliquez sur
+   **Ajouter**, choisissez une pièce, enregistrez.
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+Options :
 
-## Scènes
+- **Accepter les certificats auto-signés** : Pi-hole v6 sert le HTTPS avec un
+  certificat qu'il a signé lui-même. Cochez-la pour utiliser une adresse en
+  `https://` ; laissez-la décochée pour les adresses en `http://`.
+- **Intervalle de rafraîchissement** : la fréquence de lecture des serveurs, de
+  15 secondes à 5 minutes (1 minute par défaut).
+- **Éteindre l'interrupteur de blocage** : ce que fait l'interrupteur de
+  l'appareil quand vous l'éteignez : mettre le blocage en pause 5 minutes (par
+  défaut), 15, 30 ou 60 minutes, ou le désactiver jusqu'à ce que vous le
+  rallumiez.
+- **Langue des noms de fonctionnalités** : anglais, français, allemand ou
+  espagnol (français par défaut). Les noms sont donnés à l'ajout d'un
+  appareil.
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+## L'appareil de chaque Pi-hole
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+| Fonctionnalité               | Ce que c'est                                                                       |
+| ---------------------------- | ---------------------------------------------------------------------------------- |
+| Blocage des publicités       | Interrupteur : allumé, le Pi-hole bloque ; éteint, il laisse tout passer           |
+| Requêtes DNS (24 h)          | Requêtes reçues sur les dernières 24 heures                                        |
+| Requêtes bloquées (24 h)     | Requêtes bloquées sur les dernières 24 heures                                      |
+| Part bloquée (24 h)          | Part des requêtes bloquées, en %, arrondie                                         |
+| Clients actifs (24 h)        | Appareils qui ont utilisé le Pi-hole sur les dernières 24 heures                   |
+| Domaines en liste de blocage | Domaines présents dans les listes de blocage du Pi-hole                            |
+| Mises à jour disponibles     | Nombre d'éléments de Pi-hole ayant une version plus récente (0 si tout est à jour) |
+
+Les chiffres sont ceux de la page d'accueil de Pi-hole : une fenêtre glissante
+des dernières 24 heures, pas la journée calendaire. Le badge de l'appareil
+indique **Local** quand le Pi-hole répond et **Injoignable** sinon.
 
 ## Tableau de bord
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+Ajoutez le widget **Pi-hole** à un tableau de bord. Par défaut, il montre tous
+vos serveurs ensemble ; choisissez-en un dans ses réglages pour ne montrer que
+celui-là. Mettre en pause un seul Pi-hole sur deux ne change rien : vos
+appareils interrogent alors l'autre.
+
+Le widget montre les requêtes, les requêtes bloquées et la part bloquée sur les
+dernières 24 heures, l'état de chaque serveur (blocage actif, en pause avec les
+minutes restantes, désactivé, injoignable), les clients actifs, les domaines des
+listes de blocage et les mises à jour disponibles. Ses boutons :
+
+- **Pause 5 min** et **Pause 30 min** : mettent le blocage en pause tout de
+  suite ;
+- **Pause…** : ouvre un petit formulaire pour saisir la durée en minutes
+  (Gladys 5.2.0 ou plus récent ; un Gladys plus ancien répond qu'il faut le
+  mettre à jour) ;
+- **Réactiver** : rallume le blocage. Il porte une coche tant que le blocage est
+  actif partout.
+
+## Scènes
+
+### Déclencheurs
+
+- **Blocage Pi-hole mis en pause** : le blocage a été désactivé, depuis Gladys
+  ou ailleurs (l'interface de Pi-hole, la commande `pihole disable`, un autre
+  outil). Filtrez par Pi-hole et par origine (_Depuis Gladys_ ou _Hors de
+  Gladys_). Les actions peuvent lire le nom du Pi-hole et la durée de la pause en
+  minutes (`duration_minutes`, 0 quand elle n'a pas de fin).
+- **Blocage Pi-hole réactivé** : le blocage est de nouveau actif. L'origine dit
+  si la pause s'est terminée d'elle-même (_Fin de la pause_), depuis Gladys ou
+  ailleurs ; `paused_minutes` indique combien de temps elle a duré.
+- **Mise à jour de Pi-hole disponible** : une nouvelle version de Pi-hole est
+  sortie (cœur, FTL, interface web, ou l'image Docker quand Pi-hole tourne sous
+  Docker). Annoncée une fois par version, même après un redémarrage. `updates`
+  liste les nouvelles versions, par exemple `Core v6.1.2, FTL v6.3`.
+- **Pi-hole ne répond plus** : un Pi-hole n'a pas répondu à deux lectures de
+  suite (la seconde 15 secondes après la première). Le DNS de la maison est
+  peut-être en panne. `error` dit pourquoi, dans la langue de la configuration.
+- **Pi-hole répond de nouveau** : il est de retour ; `down_minutes` dit au bout
+  de combien de temps.
+
+Un mot de passe refusé ne compte pas comme « ne répond plus » : l'écran
+Configuration le signale.
+
+### Actions
+
+- **Mettre le blocage Pi-hole en pause** : met le blocage en pause sur un
+  Pi-hole, ou sur tous si le champ est laissé vide, pour un nombre de minutes
+  (5 par défaut, 0 jusqu'à réactivation, une journée au plus). Les actions
+  suivantes peuvent lire combien de serveurs ont été mis en pause.
+- **Réactiver le blocage Pi-hole** : rallume le blocage, sur un Pi-hole ou sur
+  tous.
+
+L'interrupteur _Blocage des publicités_ peut aussi servir avec l'action
+standard de Gladys qui contrôle un appareil.
+
+### Idées de scènes
+
+- **Filet de sécurité** : une scène chaque soir à 20 h avec _Réactiver le
+  blocage Pi-hole_, pour qu'un interrupteur éteint « jusqu'à réactivation » ne
+  reste jamais éteint toute la nuit.
+- **Alerte DNS** : _Pi-hole ne répond plus_ → envoyer un message « Pi-hole
+  {{triggerEvent.data.server}} ne répond pas : {{triggerEvent.data.error}} ».
+  Et _Pi-hole répond de nouveau_ → « de retour après
+  {{triggerEvent.data.down_minutes}} min ».
+- **Qui a mis le blocage en pause ?** : _Blocage Pi-hole mis en pause_ avec
+  l'origine _Hors de Gladys_ → envoyer un message avec la durée de la pause.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **« mot de passe refusé »** : vérifiez le mot de passe d'application. En
+  créer un nouveau dans Pi-hole remplace l'ancien : recopiez le nouveau dans
+  Gladys.
+- **« double authentification active »** : le mot de passe de l'interface web
+  demande un code de votre téléphone ; utilisez plutôt un mot de passe
+  d'application.
+- **« certificat refusé »** : vous avez saisi une adresse en `https://` ;
+  cochez _Accepter les certificats auto-signés_, ou utilisez l'adresse en
+  `http://`.
+- **« l'adresse redirige »** : votre Pi-hole renvoie les visiteurs HTTP vers le
+  HTTPS ; saisissez l'adresse en `https://` et cochez _Accepter les certificats
+  auto-signés_.
+- **« plus de session d'API libre »** : Pi-hole accepte un nombre limité de
+  sessions d'API à la fois (16 par défaut). L'intégration n'en garde qu'une par
+  serveur et la ferme à l'arrêt ; d'autres outils peuvent occuper les autres.
+  Pi-hole libère les sessions inutilisées au bout de 30 minutes.
+- **« Pi-hole v5 n'est pas pris en charge »** : mettez Pi-hole à jour en
+  version 6 (`pihole -up`).
+- **« ne répond pas »** : vérifiez que `http://<adresse>/admin` s'ouvre depuis
+  un ordinateur du réseau de Gladys. Les noms en `.local` ne fonctionnent
+  généralement pas dans l'intégration : utilisez l'adresse IP.
+- L'intégration journalise ce qu'elle fait : ouvrez les logs de l'intégration
+  depuis l'interface de Gladys. Elle n'y écrit jamais votre mot de passe.
+
+## Limites
+
+- Pi-hole v6 uniquement. Une intégration gère jusqu'à trois serveurs Pi-hole.
+- L'intégration lit chaque serveur une fois par intervalle de rafraîchissement
+  (deux petites requêtes, plus la vérification des versions une fois par heure)
+  et garde une seule session d'API par serveur : aucun quota de Pi-hole n'est
+  menacé.
+- Les chiffres couvrent les dernières 24 heures telles que Pi-hole les compte ;
+  ils ne repartent pas de zéro à minuit.
+- La part bloquée est arrondie dans l'appareil (Gladys n'a pas de capteur de
+  pourcentage décimal) ; le widget affiche une décimale.
+- L'intégration ne gère ni les listes de blocage, ni les domaines autorisés ou
+  refusés, ni les clients de Pi-hole : utilisez pour cela l'interface de
+  Pi-hole.
+- Développée sans vrai Pi-hole : ce qui n'a pas pu être vérifié sur un vrai
+  serveur est listé dans le
+  [README](https://github.com/guim31/gladys-pihole#readme).
+
+Cette intégration n'est pas affiliée à Pi-hole LLC.

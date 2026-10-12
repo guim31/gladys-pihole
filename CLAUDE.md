@@ -16,8 +16,8 @@ its only runtime dependency. It started from the official JavaScript template.
 ```bash
 npm install
 npm test                                  # node --test, the built-in runner
-node --test test/devices.test.js          # one file
-node --test --test-name-pattern "plug"    # tests whose name matches
+node --test test/hub.test.js              # one file
+node --test --test-name-pattern "pause"   # tests whose name matches
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
 npm run format                            # Prettier, fix in place
@@ -31,16 +31,22 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
+index.js                          SDK wiring only: src/app.js registers the handlers before connect()
+src/app.js                        every SDK handler -> the hub (also used by the tests)
+src/hub.js                        servers, reading timer, states, transitions -> scene events, commands
+src/devices.js                    one device per configured server: features, names (4 languages), values
+src/pihole/client.js              Pi-hole v6 REST client: session (sid), re-login on 401, errors by kind
+src/pihole/http.js                node:http/https request (self-signed certificates on request)
+src/pihole/model.js               reading /api/dns/blocking, /api/stats/summary, /api/info/version
 src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/widgets.js                    dashboard widget `pihole` (manifest `widgets`)
+src/texts.js                      connection, error, report and action texts (4 languages)
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
+src/store.js                      /data/pihole-state.json (updates already announced)
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+                                  and helpers/fakePihole.js (built from test/fixtures/pihole)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +76,10 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish: action
+  messages, widget content, feature names, manifest texts, and
+  `docs/en.md`, `docs/fr.md`, `docs/de.md`, `docs/es.md`, kept in sync
+  (`test/i18n.test.js` checks the languages and the doc sections).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -153,8 +161,14 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 **Widgets, déclencheurs, actions de scène (SDK ≥ 0.14, Gladys ≥ 5.1)**
 
 - **Cibler la dernière version publiée du cœur, pas `master`** : la spec de `master` décrit des
-  fonctions non publiées. Les boutons de widget qui ouvrent un formulaire (#3168, commit 3feb2cf8)
-  sont absents de la 5.1.4 : le bouton s'affiche et n'envoie rien. Vérifier par `git tag --contains`.
+  fonctions non publiées. Vérifier par `git tag --contains`, ou, dans le clone partiel de `ref/`
+  (l'historique n'y est pas), par `git show v5.2.0:<chemin>`. La dernière version publiée est la
+  **5.2.0** (12/10/2026).
+- Les boutons de widget qui ouvrent un formulaire (`action.fields`, #3168) sont **livrés dans la
+  5.2.0** (`validateActionValues` de `externalIntegration.runWidgetAction.js` dans `v5.2.0`) et
+  absents de la 5.1.x : un cœur 5.1 jette les `fields` et relaie le clic **sans `values`**. Garder
+  `gladys_version >=5.1.0` et répondre à un clic sans `values` par un message « mettez Gladys à
+  jour » (fait ici pour « Pause… »), plutôt qu'exclure les 5.1.
 
 - Un réglage de widget ne propose en liste que les **appareils** de l'intégration
   (`source: "devices"`, seule source dynamique).
@@ -176,6 +190,53 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 - Les filtres de scène ne font qu'égalité et appartenance : un seuil reste le travail d'un capteur.
 - **Les clés de widgets, de déclencheurs et d'actions sont figées une fois publiées.**
 - `gladys_version` `>=5.1.0` dès qu'il y a widgets, déclencheurs ou actions de scène.
+
+**Store et formulaires**
+
+- Un champ `secret` du `config_schema` **ne peut pas avoir de `default`** : le validateur du store
+  rejette le manifeste (« not allowed for secret fields »).
+
+## Pi-hole (propre à ce dépôt)
+
+- **API v6 seulement** (`/api`, servie par FTL, documentée par chaque serveur sur `/api/docs` et
+  par la spec OpenAPI de `pi-hole/FTL`, `src/api/docs/content/specs/`). La v5 (`admin/api.php`)
+  est en fin de vie : détectée (404 sur `/api/auth`, puis `admin/api.php?version` qui répond
+  `{"version": 3}`) et signalée, pas prise en charge.
+- **Sessions** : `POST /api/auth {password}` → `session.sid`, envoyé en `X-FTL-SID` (pas de CSRF
+  hors cookie). Une session dure 30 min par défaut, prolongée à chaque requête ; le nombre de
+  sessions est limité (`webserver.api.max_sessions`, 16) : **une seule session par serveur**,
+  reconnexion sur 401 seulement, `DELETE /api/auth` à l'arrêt et quand le serveur change dans la
+  configuration. Sans mot de passe sur le Pi-hole, `sid` vaut `null` et tout répond sans session.
+- **Double authentification** : le mot de passe web exige alors un code TOTP (400 « No 2FA token
+  found in JSON payload ») ; un **mot de passe d'application** (Settings → Web interface / API,
+  mode Expert → Configure app password) passe sans code. Créer un nouveau mot de passe
+  d'application invalide toutes les sessions.
+- `/api/stats/summary` compte les **24 heures glissantes** gardées en mémoire par FTL, pas la
+  journée : les noms de fonctionnalités le disent (« (24 h) »).
+- `GET /api/dns/blocking` → `{ blocking: 'enabled'|'disabled'|'failed'|'unknown', timer }`,
+  `timer` = secondes restantes avant l'état inverse (décimal), `null` si permanent. `POST` avec
+  `timer: null` rend l'état permanent et annule une pause en cours. La réponse du `POST` porte le
+  nouvel état : publié tout de suite.
+- **Mises à jour** (`/api/info/version`) : mêmes règles que le pied de page de l'interface web
+  (`scripts/js/footer.js` de `pi-hole/web`, EUPL : règles réécrites, pas de code copié) — sous
+  Docker seule l'étiquette d'image compte ; sur `master`, version locale < dernière publiée ; sur
+  une autre branche, commit différent ; version distante inconnue = pas de mise à jour.
+- Identité d'un appareil = **numéro d'emplacement** de la configuration (1 à 3), pas l'adresse :
+  Pi-hole n'expose aucun identifiant d'instance stable, et passer d'une IP à un nom ou de HTTP à
+  HTTPS ne doit pas orpheliner l'appareil.
+- **Self-signed** : `fetch` ne sait pas accepter le certificat d'un seul serveur ; d'où
+  `node:https` et `rejectUnauthorized: false` requête par requête, seulement si la case est cochée.
+- Le **déclencheur « ne répond plus »** ne compte que le silence (connexion refusée, délai) : un
+  mot de passe refusé est un problème de configuration, signalé par l'état de connexion.
+- **Limitation des connexions** (vu sur un vrai Pi-hole 6.4 en conteneur) : après un mot de passe
+  refusé, la tentative suivante, moins d'une seconde après, reçoit un 429 « Rate-limiting login
+  attempts ». Le client ne retente donc un mot de passe refusé qu'après 5 minutes (1 minute après
+  un 429) ; un nouveau mot de passe enregistré crée un nouveau client, sans attente.
+- Réponses réelles enregistrées dans `test/fixtures/pihole/real/` (Pi-hole Docker 2026.09.0) :
+  `POST /api/auth` refusé n'a **pas** de champ `csrf` ; le `timer` d'une pause est décimal
+  (`56.99999999999996`) ; `admin/api.php?version` répond 400 sur un v6.
+- Les mises à jour déjà annoncées sont gardées dans `/data/pihole-state.json` pour ne pas les
+  annoncer à chaque redémarrage.
 
 ## Store
 
@@ -200,5 +261,7 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 Tout texte montré à l'utilisateur existe en **`en`, `fr`, `de` et `es`** : manifeste, contenu des widgets, messages,
 noms de fonctionnalités. L'allemand **tutoie** (« du »), l'espagnol **vouvoie** (« usted ») : décision de Guilhem,
 appliquée à ses 21 intégrations. `test/i18n.test.js` doit échouer sur une langue manquante, un texte vide ou trop
-long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store ne publie que `docs/en.md` et `docs/fr.md`
-(`DOCS_LANGUAGES` d'integration-store) : pas de doc de/es.
+long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige `docs/en.md` et `docs/fr.md`
+(`DOCS_LANGUAGES`) et publie aussi `docs/de.md` et `docs/es.md` quand ils existent
+(`DOCS_OPTIONAL_LANGUAGES` d'integration-store) : écrire les quatre, avec les mêmes sections. Le test du « Sie »
+attrape aussi le pronom « sie » en tête de phrase (« Sie trägt… » pour « elle porte ») : reformuler.

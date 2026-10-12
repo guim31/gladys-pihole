@@ -30,6 +30,24 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration handles:
+
+- **Secrets**: the Pi-hole passwords (an app password is recommended) are
+  `secret` fields of the Gladys configuration. The integration reads them from
+  Gladys at startup, keeps them in memory, sends them only to the Pi-hole they
+  belong to (`POST /api/auth`), and never writes them to `/data` nor to the
+  logs. The API session ids live in memory only and are deleted when the
+  integration stops.
+- **Stored in `/data`**: `pihole-state.json`, the Pi-hole updates already
+  announced to the scenes (component names and version numbers). Nothing
+  else.
+- **Network**: requests go only to the Pi-hole addresses typed in the
+  configuration, on the local network, in HTTP or HTTPS. HTTPS certificates
+  are verified unless the user ticks "Accept self-signed certificates"; the
+  integration opens no port and calls no cloud service.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+Pi-hole itself (see its
+[security policy](https://github.com/pi-hole/pi-hole/security/policy)), and
+the other devices and services of your network.

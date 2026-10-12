@@ -1,33 +1,63 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeConfig, DEFAULT_CONFIG } from '../src/config.js';
+import { DEFAULT_CONFIG, hostOf, normalizeConfig, parseServerUrl } from '../src/config.js';
 
-test('normalizeConfig returns the defaults when called with no argument', () => {
-  assert.deepEqual(normalizeConfig(), DEFAULT_CONFIG);
+test('server addresses: bare host, URL copied from the browser, port, HTTPS', () => {
+  assert.equal(parseServerUrl('192.0.2.10'), 'http://192.0.2.10');
+  assert.equal(parseServerUrl(' http://192.0.2.10/admin/ '), 'http://192.0.2.10');
+  assert.equal(parseServerUrl('https://pi.hole/admin/login'), 'https://pi.hole');
+  assert.equal(parseServerUrl('pi.hole:8080'), 'http://pi.hole:8080');
+  assert.equal(parseServerUrl('HTTPS://198.51.100.20:8443'), 'https://198.51.100.20:8443');
+  assert.equal(parseServerUrl('[2001:db8::1]'), 'http://[2001:db8::1]');
+  assert.equal(hostOf('https://pi.hole:8443'), 'pi.hole:8443');
 });
 
-test('normalizeConfig keeps user values over the defaults', () => {
-  const config = normalizeConfig({ latitude: 45.5, longitude: -73.6, unit: 'fahrenheit' });
-  assert.equal(config.latitude, 45.5);
-  assert.equal(config.longitude, -73.6);
-  assert.equal(config.unit, 'fahrenheit');
+test('unusable addresses are refused', () => {
+  for (const raw of ['', '   ', 'ftp://192.0.2.10', 'http://', 'http://user:pass@192.0.2.10', 42]) {
+    assert.equal(parseServerUrl(raw), null, String(raw));
+  }
 });
 
-test('normalizeConfig coerces numeric strings coming from a form', () => {
-  const config = normalizeConfig({ latitude: '48.8', longitude: '2.3', poll_frequency: '600' });
-  assert.equal(config.latitude, 48.8);
-  assert.equal(config.longitude, 2.3);
-  assert.equal(config.poll_frequency, 600);
-  assert.equal(typeof config.poll_frequency, 'number');
+test('defaults: no server, one minute, a 5-minute pause, French', () => {
+  assert.deepEqual(normalizeConfig(), {
+    servers: [],
+    invalidSlots: [],
+    allowSelfSigned: false,
+    pollIntervalMs: 60_000,
+    switchOffMinutes: 5,
+    language: 'fr',
+  });
+  assert.deepEqual(normalizeConfig(DEFAULT_CONFIG), normalizeConfig());
+  assert.deepEqual(normalizeConfig(null), normalizeConfig());
 });
 
-test('normalizeConfig falls back to the default for a missing numeric field', () => {
-  const config = normalizeConfig({ unit: 'celsius' });
-  assert.equal(config.poll_frequency, DEFAULT_CONFIG.poll_frequency);
+test('servers by slot, with name, password kept as typed, invalid slots reported', () => {
+  const config = normalizeConfig({
+    server_1_url: '192.0.2.10',
+    server_1_password: ' pass with spaces ',
+    server_1_name: '  Living room  ',
+    server_2_url: 'not a url at all',
+    server_3_url: 'https://198.51.100.20',
+    allow_self_signed: true,
+    poll_interval: '300',
+    switch_off_minutes: '30',
+    language: 'de',
+  });
+  assert.deepEqual(config.servers, [
+    { slot: 1, url: 'http://192.0.2.10', password: ' pass with spaces ', name: 'Living room' },
+    { slot: 3, url: 'https://198.51.100.20', password: '', name: null },
+  ]);
+  assert.deepEqual(config.invalidSlots, [2]);
+  assert.equal(config.allowSelfSigned, true);
+  assert.equal(config.pollIntervalMs, 300_000);
+  assert.equal(config.switchOffMinutes, 30);
+  assert.equal(config.language, 'de');
 });
 
-test('GLADYS_PREFER_LOCAL defaults to true and only an explicit false disables it', () => {
-  assert.equal(normalizeConfig().GLADYS_PREFER_LOCAL, true);
-  assert.equal(normalizeConfig({ GLADYS_PREFER_LOCAL: true }).GLADYS_PREFER_LOCAL, true);
-  assert.equal(normalizeConfig({ GLADYS_PREFER_LOCAL: false }).GLADYS_PREFER_LOCAL, false);
+test('values outside the lists fall back to the defaults', () => {
+  const config = normalizeConfig({ poll_interval: '7', switch_off_minutes: 12, language: 'it' });
+  assert.equal(config.pollIntervalMs, 60_000);
+  assert.equal(config.switchOffMinutes, 5);
+  assert.equal(config.language, 'fr');
+  assert.equal(normalizeConfig({ poll_interval: 30 }).pollIntervalMs, 30_000);
 });

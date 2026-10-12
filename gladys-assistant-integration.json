@@ -1,177 +1,1053 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Pi-hole",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Pi-hole ad blocking: pause from the dashboard, 24 h statistics, update alerts.",
+    "fr": "Bloqueur Pi-hole : pause depuis le tableau de bord, statistiques 24 h, alertes de mise à jour.",
+    "de": "Pi-hole-Werbeblocker: Pause vom Dashboard, 24-h-Statistiken, Update-Hinweise.",
+    "es": "Bloqueador Pi-hole: pausa desde el panel, estadísticas de 24 h, avisos de actualización."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-pihole:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-pihole/main/cover.png",
+  "categories": ["network"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your Pi-hole",
+        "fr": "Votre Pi-hole",
+        "de": "Dein Pi-hole",
+        "es": "Su Pi-hole"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Pi-hole v6 or later. In Pi-hole, create an app password: Settings, Web interface / API, Expert mode, Configure app password. Up to three servers.",
+        "fr": "Pi-hole v6 ou plus récent. Dans Pi-hole, créez un mot de passe d'application : Settings, Web interface / API, mode Expert, Configure app password. Jusqu'à trois serveurs.",
+        "de": "Pi-hole v6 oder neuer. Erstelle in Pi-hole ein App-Passwort: Settings, Web interface / API, Expert-Modus, Configure app password. Bis zu drei Server.",
+        "es": "Pi-hole v6 o posterior. En Pi-hole, cree una contraseña de aplicación: Settings, Web interface / API, modo Expert, Configure app password. Hasta tres servidores."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://docs.pi-hole.net/api/auth/",
+          "label": {
+            "en": "Pi-hole API authentication",
+            "fr": "Authentification de l'API Pi-hole",
+            "de": "Authentifizierung der Pi-hole-API",
+            "es": "Autenticación de la API de Pi-hole"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "server_1_url",
+      "type": "string",
+      "label": {
+        "en": "Address",
+        "fr": "Adresse",
+        "de": "Adresse",
+        "es": "Dirección"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
+      "description": {
+        "en": "IP address or name of the Pi-hole, with https:// for HTTPS and :port if not the default.",
+        "fr": "Adresse IP ou nom du Pi-hole, avec https:// pour le HTTPS et :port s'il n'est pas standard.",
+        "de": "IP-Adresse oder Name des Pi-hole, mit https:// für HTTPS und :Port, falls nicht Standard.",
+        "es": "Dirección IP o nombre del Pi-hole, con https:// para HTTPS y :puerto si no es el estándar."
+      },
+      "placeholder": {
+        "en": "e.g. 192.168.1.2",
+        "fr": "ex. 192.168.1.2",
+        "de": "z. B. 192.168.1.2",
+        "es": "p. ej. 192.168.1.2"
+      },
       "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "default": ""
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "key": "server_1_password",
+      "type": "secret",
+      "label": {
+        "en": "App password",
+        "fr": "Mot de passe d'application",
+        "de": "App-Passwort",
+        "es": "Contraseña de aplicación"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "description": {
+        "en": "An app password (recommended) or the web interface password. Empty if the Pi-hole has none.",
+        "fr": "Un mot de passe d'application (conseillé) ou celui de l'interface web. Vide si le Pi-hole n'en a pas.",
+        "de": "Ein App-Passwort (empfohlen) oder das Passwort der Weboberfläche. Leer, wenn das Pi-hole keins hat.",
+        "es": "Una contraseña de aplicación (recomendado) o la de la interfaz web. Vacío si el Pi-hole no tiene."
+      },
+      "required": false
     },
     {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "key": "server_1_name",
+      "type": "string",
+      "label": {
+        "en": "Name",
+        "fr": "Nom",
+        "de": "Name",
+        "es": "Nombre"
+      },
+      "description": {
+        "en": "Name of the device in Gladys. Empty: \"Pi-hole\" followed by the address.",
+        "fr": "Nom de l'appareil dans Gladys. Vide : « Pi-hole » suivi de l'adresse.",
+        "de": "Name des Geräts in Gladys. Leer: „Pi-hole“ gefolgt von der Adresse.",
+        "es": "Nombre del dispositivo en Gladys. Vacío: «Pi-hole» seguido de la dirección."
+      },
+      "placeholder": {
+        "en": "e.g. Pi-hole living room",
+        "fr": "ex. Pi-hole salon",
+        "de": "z. B. Pi-hole Wohnzimmer",
+        "es": "p. ej. Pi-hole salón"
+      },
       "required": false,
-      "default": "celsius",
+      "default": ""
+    },
+    {
+      "key": "server_2",
+      "type": "section",
+      "label": {
+        "en": "Second Pi-hole (optional)",
+        "fr": "Deuxième Pi-hole (facultatif)",
+        "de": "Zweites Pi-hole (optional)",
+        "es": "Segundo Pi-hole (opcional)"
+      },
+      "description": {
+        "en": "Same fields, for another Pi-hole of your network.",
+        "fr": "Les mêmes champs, pour un autre Pi-hole de votre réseau.",
+        "de": "Dieselben Felder, für ein weiteres Pi-hole in deinem Netzwerk.",
+        "es": "Los mismos campos, para otro Pi-hole de su red."
+      }
+    },
+    {
+      "key": "server_2_url",
+      "type": "string",
+      "label": {
+        "en": "Address",
+        "fr": "Adresse",
+        "de": "Adresse",
+        "es": "Dirección"
+      },
+      "description": {
+        "en": "IP address or name of the Pi-hole, with https:// for HTTPS and :port if not the default.",
+        "fr": "Adresse IP ou nom du Pi-hole, avec https:// pour le HTTPS et :port s'il n'est pas standard.",
+        "de": "IP-Adresse oder Name des Pi-hole, mit https:// für HTTPS und :Port, falls nicht Standard.",
+        "es": "Dirección IP o nombre del Pi-hole, con https:// para HTTPS y :puerto si no es el estándar."
+      },
+      "placeholder": {
+        "en": "e.g. 192.168.1.2",
+        "fr": "ex. 192.168.1.2",
+        "de": "z. B. 192.168.1.2",
+        "es": "p. ej. 192.168.1.2"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "server_2_password",
+      "type": "secret",
+      "label": {
+        "en": "App password",
+        "fr": "Mot de passe d'application",
+        "de": "App-Passwort",
+        "es": "Contraseña de aplicación"
+      },
+      "description": {
+        "en": "An app password (recommended) or the web interface password. Empty if the Pi-hole has none.",
+        "fr": "Un mot de passe d'application (conseillé) ou celui de l'interface web. Vide si le Pi-hole n'en a pas.",
+        "de": "Ein App-Passwort (empfohlen) oder das Passwort der Weboberfläche. Leer, wenn das Pi-hole keins hat.",
+        "es": "Una contraseña de aplicación (recomendado) o la de la interfaz web. Vacío si el Pi-hole no tiene."
+      },
+      "required": false
+    },
+    {
+      "key": "server_2_name",
+      "type": "string",
+      "label": {
+        "en": "Name",
+        "fr": "Nom",
+        "de": "Name",
+        "es": "Nombre"
+      },
+      "description": {
+        "en": "Name of the device in Gladys. Empty: \"Pi-hole\" followed by the address.",
+        "fr": "Nom de l'appareil dans Gladys. Vide : « Pi-hole » suivi de l'adresse.",
+        "de": "Name des Geräts in Gladys. Leer: „Pi-hole“ gefolgt von der Adresse.",
+        "es": "Nombre del dispositivo en Gladys. Vacío: «Pi-hole» seguido de la dirección."
+      },
+      "placeholder": {
+        "en": "e.g. Pi-hole living room",
+        "fr": "ex. Pi-hole salon",
+        "de": "z. B. Pi-hole Wohnzimmer",
+        "es": "p. ej. Pi-hole salón"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "server_3",
+      "type": "section",
+      "label": {
+        "en": "Third Pi-hole (optional)",
+        "fr": "Troisième Pi-hole (facultatif)",
+        "de": "Drittes Pi-hole (optional)",
+        "es": "Tercer Pi-hole (opcional)"
+      },
+      "description": {
+        "en": "Same fields, for another Pi-hole of your network.",
+        "fr": "Les mêmes champs, pour un autre Pi-hole de votre réseau.",
+        "de": "Dieselben Felder, für ein weiteres Pi-hole in deinem Netzwerk.",
+        "es": "Los mismos campos, para otro Pi-hole de su red."
+      }
+    },
+    {
+      "key": "server_3_url",
+      "type": "string",
+      "label": {
+        "en": "Address",
+        "fr": "Adresse",
+        "de": "Adresse",
+        "es": "Dirección"
+      },
+      "description": {
+        "en": "IP address or name of the Pi-hole, with https:// for HTTPS and :port if not the default.",
+        "fr": "Adresse IP ou nom du Pi-hole, avec https:// pour le HTTPS et :port s'il n'est pas standard.",
+        "de": "IP-Adresse oder Name des Pi-hole, mit https:// für HTTPS und :Port, falls nicht Standard.",
+        "es": "Dirección IP o nombre del Pi-hole, con https:// para HTTPS y :puerto si no es el estándar."
+      },
+      "placeholder": {
+        "en": "e.g. 192.168.1.2",
+        "fr": "ex. 192.168.1.2",
+        "de": "z. B. 192.168.1.2",
+        "es": "p. ej. 192.168.1.2"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "server_3_password",
+      "type": "secret",
+      "label": {
+        "en": "App password",
+        "fr": "Mot de passe d'application",
+        "de": "App-Passwort",
+        "es": "Contraseña de aplicación"
+      },
+      "description": {
+        "en": "An app password (recommended) or the web interface password. Empty if the Pi-hole has none.",
+        "fr": "Un mot de passe d'application (conseillé) ou celui de l'interface web. Vide si le Pi-hole n'en a pas.",
+        "de": "Ein App-Passwort (empfohlen) oder das Passwort der Weboberfläche. Leer, wenn das Pi-hole keins hat.",
+        "es": "Una contraseña de aplicación (recomendado) o la de la interfaz web. Vacío si el Pi-hole no tiene."
+      },
+      "required": false
+    },
+    {
+      "key": "server_3_name",
+      "type": "string",
+      "label": {
+        "en": "Name",
+        "fr": "Nom",
+        "de": "Name",
+        "es": "Nombre"
+      },
+      "description": {
+        "en": "Name of the device in Gladys. Empty: \"Pi-hole\" followed by the address.",
+        "fr": "Nom de l'appareil dans Gladys. Vide : « Pi-hole » suivi de l'adresse.",
+        "de": "Name des Geräts in Gladys. Leer: „Pi-hole“ gefolgt von der Adresse.",
+        "es": "Nombre del dispositivo en Gladys. Vacío: «Pi-hole» seguido de la dirección."
+      },
+      "placeholder": {
+        "en": "e.g. Pi-hole living room",
+        "fr": "ex. Pi-hole salon",
+        "de": "z. B. Pi-hole Wohnzimmer",
+        "es": "p. ej. Pi-hole salón"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "options",
+      "type": "section",
+      "label": {
+        "en": "Options",
+        "fr": "Options",
+        "de": "Optionen",
+        "es": "Opciones"
+      }
+    },
+    {
+      "key": "allow_self_signed",
+      "type": "boolean",
+      "label": {
+        "en": "Accept self-signed certificates",
+        "fr": "Accepter les certificats auto-signés",
+        "de": "Selbstsignierte Zertifikate akzeptieren",
+        "es": "Aceptar certificados autofirmados"
+      },
+      "description": {
+        "en": "For https:// addresses: Pi-hole serves a self-signed certificate by default. Tick only for your own servers.",
+        "fr": "Pour les adresses en https:// : Pi-hole sert par défaut un certificat auto-signé. À cocher pour vos propres serveurs seulement.",
+        "de": "Für https://-Adressen: Pi-hole liefert standardmäßig ein selbstsigniertes Zertifikat. Nur für deine eigenen Server aktivieren.",
+        "es": "Para direcciones https://: Pi-hole sirve por defecto un certificado autofirmado. Márquelo solo para sus propios servidores."
+      },
+      "required": false,
+      "default": false
+    },
+    {
+      "key": "poll_interval",
+      "type": "select",
+      "label": {
+        "en": "Refresh interval",
+        "fr": "Intervalle de rafraîchissement",
+        "de": "Aktualisierungsintervall",
+        "es": "Intervalo de actualización"
+      },
+      "description": {
+        "en": "How often the Pi-hole servers are read.",
+        "fr": "Fréquence de lecture des serveurs Pi-hole.",
+        "de": "Wie oft die Pi-hole-Server gelesen werden.",
+        "es": "Con qué frecuencia se leen los servidores Pi-hole."
+      },
+      "required": false,
+      "default": "60",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "15",
+          "label": {
+            "en": "15 seconds",
+            "fr": "15 secondes",
+            "de": "15 Sekunden",
+            "es": "15 segundos"
+          }
+        },
+        {
+          "value": "30",
+          "label": {
+            "en": "30 seconds",
+            "fr": "30 secondes",
+            "de": "30 Sekunden",
+            "es": "30 segundos"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "1 minute",
+            "fr": "1 minute",
+            "de": "1 Minute",
+            "es": "1 minuto"
+          }
+        },
+        {
+          "value": "120",
+          "label": {
+            "en": "2 minutes",
+            "fr": "2 minutes",
+            "de": "2 Minuten",
+            "es": "2 minutos"
+          }
+        },
+        {
+          "value": "300",
+          "label": {
+            "en": "5 minutes",
+            "fr": "5 minutes",
+            "de": "5 Minuten",
+            "es": "5 minutos"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "switch_off_minutes",
+      "type": "select",
+      "label": {
+        "en": "Turning the blocking switch off",
+        "fr": "Éteindre l'interrupteur de blocage",
+        "de": "Blockierschalter ausschalten",
+        "es": "Apagar el interruptor de bloqueo"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Pauses the blocking for this long, or until the switch is turned back on.",
+        "fr": "Met le blocage en pause pour cette durée, ou jusqu'à ce que l'interrupteur soit rallumé.",
+        "de": "Pausiert die Blockierung so lange oder bis der Schalter wieder eingeschaltet wird.",
+        "es": "Pausa el bloqueo durante este tiempo, o hasta que se vuelva a encender el interruptor."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "5",
+      "options": [
+        {
+          "value": "0",
+          "label": {
+            "en": "Until turned back on",
+            "fr": "Jusqu'à réactivation",
+            "de": "Bis zum Wiedereinschalten",
+            "es": "Hasta volver a encenderlo"
+          }
+        },
+        {
+          "value": "5",
+          "label": {
+            "en": "Pause 5 minutes",
+            "fr": "Pause de 5 minutes",
+            "de": "5 Minuten Pause",
+            "es": "Pausa de 5 minutos"
+          }
+        },
+        {
+          "value": "15",
+          "label": {
+            "en": "Pause 15 minutes",
+            "fr": "Pause de 15 minutes",
+            "de": "15 Minuten Pause",
+            "es": "Pausa de 15 minutos"
+          }
+        },
+        {
+          "value": "30",
+          "label": {
+            "en": "Pause 30 minutes",
+            "fr": "Pause de 30 minutes",
+            "de": "30 Minuten Pause",
+            "es": "Pausa de 30 minutos"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "Pause 1 hour",
+            "fr": "Pause d'une heure",
+            "de": "1 Stunde Pause",
+            "es": "Pausa de 1 hora"
+          }
+        }
+      ]
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the feature names",
+        "fr": "Langue des noms de fonctionnalités",
+        "de": "Sprache der Funktionsnamen",
+        "es": "Idioma de los nombres de funciones"
+      },
+      "description": {
+        "en": "Names given to the features when a device is added, and texts of the scene events.",
+        "fr": "Noms donnés aux fonctionnalités à l'ajout d'un appareil, et textes des événements de scène.",
+        "de": "Namen der Funktionen beim Hinzufügen eines Geräts und Texte der Szenen-Ereignisse.",
+        "es": "Nombres de las funciones al añadir un dispositivo y textos de los eventos de escena."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
+      "description": {
+        "en": "Reads every Pi-hole now and reports what it finds.",
+        "fr": "Lit chaque Pi-hole maintenant et indique ce qu'il trouve.",
+        "de": "Liest jedes Pi-hole sofort und meldet, was es findet.",
+        "es": "Lee cada Pi-hole ahora e indica lo que encuentra."
+      },
       "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "blocking_paused",
+      "label": {
+        "en": "Pi-hole blocking paused",
+        "fr": "Blocage Pi-hole mis en pause",
+        "de": "Pi-hole-Blockierung pausiert",
+        "es": "Bloqueo de Pi-hole en pausa"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "The ad blocking was turned off, from Gladys or elsewhere, with the length of the pause.",
+        "fr": "Le blocage a été désactivé, depuis Gladys ou ailleurs, avec la durée de la pause.",
+        "de": "Die Werbeblockierung wurde ausgeschaltet, über Gladys oder anderswo, mit der Dauer der Pause.",
+        "es": "El bloqueo se ha desactivado, desde Gladys o desde otro lugar, con la duración de la pausa."
       },
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "label": {
+            "en": "Pi-hole (empty: any)",
+            "fr": "Pi-hole (vide : n'importe lequel)",
+            "de": "Pi-hole (leer: beliebig)",
+            "es": "Pi-hole (vacío: cualquiera)"
+          }
         },
         {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "key": "origin",
+          "type": "select",
+          "label": {
+            "en": "Origin (empty: any)",
+            "fr": "Origine (vide : toutes)",
+            "de": "Ursprung (leer: beliebig)",
+            "es": "Origen (vacío: cualquiera)"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "gladys",
+              "label": {
+                "en": "From Gladys",
+                "fr": "Depuis Gladys",
+                "de": "Von Gladys",
+                "es": "Desde Gladys"
+              }
+            },
+            {
+              "value": "pihole",
+              "label": {
+                "en": "Outside Gladys (Pi-hole interface…)",
+                "fr": "Hors de Gladys (interface Pi-hole…)",
+                "de": "Außerhalb von Gladys (Pi-hole-Oberfläche…)",
+                "es": "Fuera de Gladys (interfaz de Pi-hole…)"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "server",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Pi-hole name",
+            "fr": "Nom du Pi-hole",
+            "de": "Name des Pi-hole",
+            "es": "Nombre del Pi-hole"
+          }
+        },
+        {
+          "key": "device",
+          "type": "string",
+          "label": {
+            "en": "Pi-hole device",
+            "fr": "Appareil Pi-hole",
+            "de": "Pi-hole-Gerät",
+            "es": "Dispositivo Pi-hole"
+          }
+        },
+        {
+          "key": "origin",
+          "type": "string",
+          "label": {
+            "en": "Origin (gladys, pihole, timer)",
+            "fr": "Origine (gladys, pihole, timer)",
+            "de": "Ursprung (gladys, pihole, timer)",
+            "es": "Origen (gladys, pihole, timer)"
+          }
+        },
+        {
+          "key": "duration_minutes",
+          "type": "number",
+          "label": {
+            "en": "Pause length in minutes (0: no end)",
+            "fr": "Durée de la pause en minutes (0 : sans fin)",
+            "de": "Dauer der Pause in Minuten (0: ohne Ende)",
+            "es": "Duración de la pausa en minutos (0: sin fin)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "blocking_resumed",
+      "label": {
+        "en": "Pi-hole blocking resumed",
+        "fr": "Blocage Pi-hole réactivé",
+        "de": "Pi-hole-Blockierung fortgesetzt",
+        "es": "Bloqueo de Pi-hole reactivado"
+      },
+      "description": {
+        "en": "The ad blocking is on again: at the end of the pause, from Gladys or elsewhere.",
+        "fr": "Le blocage est de nouveau actif : à la fin de la pause, depuis Gladys ou ailleurs.",
+        "de": "Die Werbeblockierung ist wieder aktiv: am Ende der Pause, über Gladys oder anderswo.",
+        "es": "El bloqueo vuelve a estar activo: al final de la pausa, desde Gladys o desde otro lugar."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Pi-hole (empty: any)",
+            "fr": "Pi-hole (vide : n'importe lequel)",
+            "de": "Pi-hole (leer: beliebig)",
+            "es": "Pi-hole (vacío: cualquiera)"
+          }
+        },
+        {
+          "key": "origin",
+          "type": "select",
+          "label": {
+            "en": "Origin (empty: any)",
+            "fr": "Origine (vide : toutes)",
+            "de": "Ursprung (leer: beliebig)",
+            "es": "Origen (vacío: cualquiera)"
+          },
+          "options": [
+            {
+              "value": "timer",
+              "label": {
+                "en": "End of the pause",
+                "fr": "Fin de la pause",
+                "de": "Ende der Pause",
+                "es": "Fin de la pausa"
+              }
+            },
+            {
+              "value": "gladys",
+              "label": {
+                "en": "From Gladys",
+                "fr": "Depuis Gladys",
+                "de": "Von Gladys",
+                "es": "Desde Gladys"
+              }
+            },
+            {
+              "value": "pihole",
+              "label": {
+                "en": "Outside Gladys (Pi-hole interface…)",
+                "fr": "Hors de Gladys (interface Pi-hole…)",
+                "de": "Außerhalb von Gladys (Pi-hole-Oberfläche…)",
+                "es": "Fuera de Gladys (interfaz de Pi-hole…)"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "server",
+          "type": "string",
+          "label": {
+            "en": "Pi-hole name",
+            "fr": "Nom du Pi-hole",
+            "de": "Name des Pi-hole",
+            "es": "Nombre del Pi-hole"
+          }
+        },
+        {
+          "key": "device",
+          "type": "string",
+          "label": {
+            "en": "Pi-hole device",
+            "fr": "Appareil Pi-hole",
+            "de": "Pi-hole-Gerät",
+            "es": "Dispositivo Pi-hole"
+          }
+        },
+        {
+          "key": "origin",
+          "type": "string",
+          "label": {
+            "en": "Origin (gladys, pihole, timer)",
+            "fr": "Origine (gladys, pihole, timer)",
+            "de": "Ursprung (gladys, pihole, timer)",
+            "es": "Origen (gladys, pihole, timer)"
+          }
+        },
+        {
+          "key": "paused_minutes",
+          "type": "number",
+          "label": {
+            "en": "Minutes without blocking",
+            "fr": "Minutes sans blocage",
+            "de": "Minuten ohne Blockierung",
+            "es": "Minutos sin bloqueo"
+          }
+        }
+      ]
+    },
+    {
+      "key": "update_available",
+      "label": {
+        "en": "Pi-hole update available",
+        "fr": "Mise à jour de Pi-hole disponible",
+        "de": "Pi-hole-Update verfügbar",
+        "es": "Actualización de Pi-hole disponible"
+      },
+      "description": {
+        "en": "A new version of Pi-hole (core, FTL, web interface or Docker image) is out. Once per version.",
+        "fr": "Une nouvelle version de Pi-hole (cœur, FTL, interface web ou image Docker) est sortie. Une fois par version.",
+        "de": "Eine neue Version von Pi-hole (Core, FTL, Weboberfläche oder Docker-Image) ist erschienen. Einmal pro Version.",
+        "es": "Hay una nueva versión de Pi-hole (núcleo, FTL, interfaz web o imagen Docker). Una vez por versión."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Pi-hole (empty: any)",
+            "fr": "Pi-hole (vide : n'importe lequel)",
+            "de": "Pi-hole (leer: beliebig)",
+            "es": "Pi-hole (vacío: cualquiera)"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "server",
+          "type": "string",
+          "label": {
+            "en": "Pi-hole name",
+            "fr": "Nom du Pi-hole",
+            "de": "Name des Pi-hole",
+            "es": "Nombre del Pi-hole"
+          }
+        },
+        {
+          "key": "device",
+          "type": "string",
+          "label": {
+            "en": "Pi-hole device",
+            "fr": "Appareil Pi-hole",
+            "de": "Pi-hole-Gerät",
+            "es": "Dispositivo Pi-hole"
+          }
+        },
+        {
+          "key": "updates",
+          "type": "string",
+          "label": {
+            "en": "New versions",
+            "fr": "Nouvelles versions",
+            "de": "Neue Versionen",
+            "es": "Nuevas versiones"
+          }
+        },
+        {
+          "key": "count",
+          "type": "number",
+          "label": {
+            "en": "Number of updates",
+            "fr": "Nombre de mises à jour",
+            "de": "Anzahl der Updates",
+            "es": "Número de actualizaciones"
+          }
+        }
+      ]
+    },
+    {
+      "key": "server_unreachable",
+      "label": {
+        "en": "Pi-hole no longer answers",
+        "fr": "Pi-hole ne répond plus",
+        "de": "Pi-hole antwortet nicht mehr",
+        "es": "Pi-hole ya no responde"
+      },
+      "description": {
+        "en": "A Pi-hole stopped answering (two reads in a row): the DNS of the home may be down.",
+        "fr": "Un Pi-hole ne répond plus (deux lectures de suite) : le DNS de la maison est peut-être en panne.",
+        "de": "Ein Pi-hole antwortet nicht mehr (zwei Abfragen in Folge): Das DNS des Hauses ist vielleicht ausgefallen.",
+        "es": "Un Pi-hole ha dejado de responder (dos lecturas seguidas): el DNS de la casa puede estar caído."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Pi-hole (empty: any)",
+            "fr": "Pi-hole (vide : n'importe lequel)",
+            "de": "Pi-hole (leer: beliebig)",
+            "es": "Pi-hole (vacío: cualquiera)"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "server",
+          "type": "string",
+          "label": {
+            "en": "Pi-hole name",
+            "fr": "Nom du Pi-hole",
+            "de": "Name des Pi-hole",
+            "es": "Nombre del Pi-hole"
+          }
+        },
+        {
+          "key": "device",
+          "type": "string",
+          "label": {
+            "en": "Pi-hole device",
+            "fr": "Appareil Pi-hole",
+            "de": "Pi-hole-Gerät",
+            "es": "Dispositivo Pi-hole"
+          }
+        },
+        {
+          "key": "error",
+          "type": "string",
+          "label": {
+            "en": "Error",
+            "fr": "Erreur",
+            "de": "Fehler",
+            "es": "Error"
+          }
+        }
+      ]
+    },
+    {
+      "key": "server_recovered",
+      "label": {
+        "en": "Pi-hole answers again",
+        "fr": "Pi-hole répond de nouveau",
+        "de": "Pi-hole antwortet wieder",
+        "es": "Pi-hole vuelve a responder"
+      },
+      "description": {
+        "en": "A Pi-hole that no longer answered is back.",
+        "fr": "Un Pi-hole qui ne répondait plus est de retour.",
+        "de": "Ein Pi-hole, das nicht mehr antwortete, ist wieder da.",
+        "es": "Un Pi-hole que no respondía ha vuelto."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Pi-hole (empty: any)",
+            "fr": "Pi-hole (vide : n'importe lequel)",
+            "de": "Pi-hole (leer: beliebig)",
+            "es": "Pi-hole (vacío: cualquiera)"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "server",
+          "type": "string",
+          "label": {
+            "en": "Pi-hole name",
+            "fr": "Nom du Pi-hole",
+            "de": "Name des Pi-hole",
+            "es": "Nombre del Pi-hole"
+          }
+        },
+        {
+          "key": "device",
+          "type": "string",
+          "label": {
+            "en": "Pi-hole device",
+            "fr": "Appareil Pi-hole",
+            "de": "Pi-hole-Gerät",
+            "es": "Dispositivo Pi-hole"
+          }
+        },
+        {
+          "key": "down_minutes",
+          "type": "number",
+          "label": {
+            "en": "Minutes without answer",
+            "fr": "Minutes sans réponse",
+            "de": "Minuten ohne Antwort",
+            "es": "Minutos sin respuesta"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "pause_blocking",
+      "label": {
+        "en": "Pause Pi-hole blocking",
+        "fr": "Mettre le blocage Pi-hole en pause",
+        "de": "Pi-hole-Blockierung pausieren",
+        "es": "Pausar el bloqueo de Pi-hole"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "Turn the ad blocking off for a number of minutes, on one Pi-hole or all of them.",
+        "fr": "Désactive le blocage pour un nombre de minutes, sur un Pi-hole ou sur tous.",
+        "de": "Schaltet die Werbeblockierung für einige Minuten aus, auf einem oder allen Pi-holes.",
+        "es": "Desactiva el bloqueo durante unos minutos, en un Pi-hole o en todos."
+      },
+      "timeout_seconds": 20,
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "label": {
+            "en": "Pi-hole (empty: all)",
+            "fr": "Pi-hole (vide : tous)",
+            "de": "Pi-hole (leer: alle)",
+            "es": "Pi-hole (vacío: todos)"
+          }
+        },
+        {
+          "key": "minutes",
+          "type": "number",
+          "label": {
+            "en": "Duration in minutes (0: until resumed)",
+            "fr": "Durée en minutes (0 : jusqu'à réactivation)",
+            "de": "Dauer in Minuten (0: bis zum Fortsetzen)",
+            "es": "Duración en minutos (0: hasta reactivar)"
+          },
+          "required": false,
+          "default": 5,
+          "min": 0,
+          "max": 1440
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "servers",
+          "type": "number",
+          "label": {
+            "en": "Pi-holes paused",
+            "fr": "Pi-hole mis en pause",
+            "de": "Pausierte Pi-holes",
+            "es": "Pi-hole en pausa"
+          }
+        },
+        {
+          "key": "minutes",
+          "type": "number",
+          "label": {
+            "en": "Duration in minutes",
+            "fr": "Durée en minutes",
+            "de": "Dauer in Minuten",
+            "es": "Duración en minutos"
+          }
+        }
+      ]
+    },
+    {
+      "key": "resume_blocking",
+      "label": {
+        "en": "Resume Pi-hole blocking",
+        "fr": "Réactiver le blocage Pi-hole",
+        "de": "Pi-hole-Blockierung fortsetzen",
+        "es": "Reactivar el bloqueo de Pi-hole"
+      },
+      "description": {
+        "en": "Turn the ad blocking back on, on one Pi-hole or all of them.",
+        "fr": "Réactive le blocage, sur un Pi-hole ou sur tous.",
+        "de": "Schaltet die Werbeblockierung wieder ein, auf einem oder allen Pi-holes.",
+        "es": "Vuelve a activar el bloqueo, en un Pi-hole o en todos."
+      },
+      "timeout_seconds": 20,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Pi-hole (empty: all)",
+            "fr": "Pi-hole (vide : tous)",
+            "de": "Pi-hole (leer: alle)",
+            "es": "Pi-hole (vacío: todos)"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "key": "servers",
+          "type": "number",
+          "label": {
+            "en": "Pi-holes resumed",
+            "fr": "Pi-hole réactivés",
+            "de": "Fortgesetzte Pi-holes",
+            "es": "Pi-hole reactivados"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "pihole",
+      "label": {
+        "en": "Pi-hole",
+        "fr": "Pi-hole",
+        "de": "Pi-hole",
+        "es": "Pi-hole"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Blocking state, queries of the last 24 h, and pause or resume buttons.",
+        "fr": "État du blocage, requêtes des dernières 24 h, boutons de pause et de réactivation.",
+        "de": "Status der Blockierung, Anfragen der letzten 24 h, Pause- und Fortsetzen-Tasten.",
+        "es": "Estado del bloqueo, consultas de las últimas 24 h, botones de pausa y reactivación."
+      },
+      "icon": "shield",
+      "action_timeout_seconds": 20,
+      "settings": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Pi-hole (empty: all)",
+            "fr": "Pi-hole (vide : tous)",
+            "de": "Pi-hole (leer: alle)",
+            "es": "Pi-hole (vacío: todos)"
+          },
+          "description": {
+            "en": "Pausing one Pi-hole of two changes nothing: your devices then ask the other one.",
+            "fr": "Mettre en pause un seul Pi-hole sur deux ne change rien : vos appareils interrogent alors l'autre.",
+            "de": "Ein Pi-hole von zweien zu pausieren ändert nichts: Deine Geräte fragen dann das andere.",
+            "es": "Pausar un solo Pi-hole de dos no cambia nada: sus dispositivos consultan entonces el otro."
+          },
+          "required": false
+        }
+      ]
     }
   ]
 }
