@@ -204,7 +204,6 @@ export class PiholeHub {
       }
       this.schedulePoll();
     }, this.config.pollIntervalMs);
-    this.pollTimer.unref?.();
   }
 
   // --- Devices -----------------------------------------------------------------
