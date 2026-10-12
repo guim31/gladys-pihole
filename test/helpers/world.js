@@ -41,7 +41,12 @@ export function createClock(start = Date.UTC(2026, 9, 12, 10, 0, 0)) {
 export async function createWorld({
   clock = createClock(),
   servers,
-  config = { server_1_url: URL_1, server_1_password: 'secret', server_1_name: 'Pi-hole' },
+  config = {
+    server_1_url: URL_1,
+    server_1_password: 'secret',
+    server_1_name: 'Pi-hole',
+    language: 'en',
+  },
   devices = [],
   connect = true,
   dataDir = mkdtempSync(join(tmpdir(), 'gladys-pihole-')),

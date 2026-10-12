@@ -14,8 +14,8 @@ no account.
 ## Features
 
 - **One device per Pi-hole** (up to three servers, each with its own address
-  and password): the **ad blocking switch** (off: until turned back on, or a
-  pause of 5 to 60 minutes, as configured), the DNS queries, blocked queries
+  and password): the **ad blocking switch** (off: a 5-minute pause by
+  default, up to 60 minutes, or until turned back on, as configured), the DNS queries, blocked queries
   and share blocked over the last 24 hours, the active clients, the domains on
   the blocklists, and the number of **updates available**.
 - **Dashboard widget** "Pi-hole": the 24 h figures of every server (or one),

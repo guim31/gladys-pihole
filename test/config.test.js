@@ -18,14 +18,14 @@ test('unusable addresses are refused', () => {
   }
 });
 
-test('defaults: no server, one minute, switch off until turned on, English', () => {
+test('defaults: no server, one minute, a 5-minute pause, French', () => {
   assert.deepEqual(normalizeConfig(), {
     servers: [],
     invalidSlots: [],
     allowSelfSigned: false,
     pollIntervalMs: 60_000,
-    switchOffMinutes: 0,
-    language: 'en',
+    switchOffMinutes: 5,
+    language: 'fr',
   });
   assert.deepEqual(normalizeConfig(DEFAULT_CONFIG), normalizeConfig());
   assert.deepEqual(normalizeConfig(null), normalizeConfig());
@@ -57,7 +57,7 @@ test('servers by slot, with name, password kept as typed, invalid slots reported
 test('values outside the lists fall back to the defaults', () => {
   const config = normalizeConfig({ poll_interval: '7', switch_off_minutes: 12, language: 'it' });
   assert.equal(config.pollIntervalMs, 60_000);
-  assert.equal(config.switchOffMinutes, 0);
-  assert.equal(config.language, 'en');
+  assert.equal(config.switchOffMinutes, 5);
+  assert.equal(config.language, 'fr');
   assert.equal(normalizeConfig({ poll_interval: 30 }).pollIntervalMs, 30_000);
 });

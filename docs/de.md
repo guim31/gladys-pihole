@@ -50,10 +50,11 @@ Optionen:
 - **Aktualisierungsintervall**: wie oft die Server gelesen werden, von 15
   Sekunden bis 5 Minuten (standardmäßig 1 Minute).
 - **Blockierschalter ausschalten**: was der Schalter des Geräts beim
-  Ausschalten tut: die Blockierung deaktivieren, bis du ihn wieder einschaltest
-  (Standard), oder sie für 5, 15, 30 oder 60 Minuten pausieren.
+  Ausschalten tut: die Blockierung 5 Minuten (Standard), 15, 30 oder 60 Minuten
+  pausieren, oder sie deaktivieren, bis du ihn wieder einschaltest.
 - **Sprache der Funktionsnamen**: Englisch, Französisch, Deutsch oder Spanisch.
-  Die Namen werden beim Hinzufügen eines Geräts vergeben.
+  Die Namen werden beim Hinzufügen eines Geräts vergeben (standardmäßig
+  Französisch).
 
 ## Das Gerät jedes Pi-hole
 

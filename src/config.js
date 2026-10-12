@@ -31,8 +31,8 @@ export const DEFAULT_CONFIG = {
   server_3_name: '',
   allow_self_signed: false,
   poll_interval: '60',
-  switch_off_minutes: '0',
-  language: 'en',
+  switch_off_minutes: '5',
+  language: 'fr',
 };
 
 const MAX_NAME_LENGTH = 40;

@@ -51,10 +51,12 @@ Options :
 - **Intervalle de rafraîchissement** : la fréquence de lecture des serveurs, de
   15 secondes à 5 minutes (1 minute par défaut).
 - **Éteindre l'interrupteur de blocage** : ce que fait l'interrupteur de
-  l'appareil quand vous l'éteignez : désactiver le blocage jusqu'à ce que vous
-  le rallumiez (par défaut), ou le mettre en pause 5, 15, 30 ou 60 minutes.
+  l'appareil quand vous l'éteignez : mettre le blocage en pause 5 minutes (par
+  défaut), 15, 30 ou 60 minutes, ou le désactiver jusqu'à ce que vous le
+  rallumiez.
 - **Langue des noms de fonctionnalités** : anglais, français, allemand ou
-  espagnol. Les noms sont donnés à l'ajout d'un appareil.
+  espagnol (français par défaut). Les noms sont donnés à l'ajout d'un
+  appareil.
 
 ## L'appareil de chaque Pi-hole
 

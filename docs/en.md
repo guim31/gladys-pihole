@@ -48,10 +48,10 @@ Options:
 - **Refresh interval**: how often the servers are read, from 15 seconds to 5
   minutes (1 minute by default).
 - **Turning the blocking switch off**: what the switch of the device does when
-  you turn it off: disable the blocking until you turn it back on (default), or
-  pause it for 5, 15, 30 or 60 minutes.
+  you turn it off: pause the blocking for 5 minutes (default), 15, 30 or 60
+  minutes, or disable it until you turn it back on.
 - **Language of the feature names**: English, French, German or Spanish. The
-  names are given when a device is added.
+  names are given when a device is added (French by default).
 
 ## The device of each Pi-hole
 

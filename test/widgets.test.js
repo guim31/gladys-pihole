@@ -17,6 +17,7 @@ const TWO_SERVERS = {
   server_2_url: URL_2,
   server_2_password: 'secret',
   server_2_name: 'Secondary',
+  language: 'en',
 };
 
 async function world(t, { config, servers } = {}) {

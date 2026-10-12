@@ -49,10 +49,10 @@ Opciones:
 - **Intervalo de actualización**: con qué frecuencia se leen los servidores, de
   15 segundos a 5 minutos (1 minuto por defecto).
 - **Apagar el interruptor de bloqueo**: lo que hace el interruptor del
-  dispositivo al apagarlo: desactivar el bloqueo hasta que lo vuelva a
-  encender (por defecto), o pausarlo 5, 15, 30 o 60 minutos.
+  dispositivo al apagarlo: pausar el bloqueo 5 minutos (por defecto), 15, 30 o
+  60 minutos, o desactivarlo hasta que lo vuelva a encender.
 - **Idioma de los nombres de funciones**: inglés, francés, alemán o español.
-  Los nombres se asignan al añadir un dispositivo.
+  Los nombres se asignan al añadir un dispositivo (francés por defecto).
 
 ## El dispositivo de cada Pi-hole
 

@@ -378,7 +378,7 @@
         "es": "Pausa el bloqueo durante este tiempo, o hasta que se vuelva a encender el interruptor."
       },
       "required": false,
-      "default": "0",
+      "default": "5",
       "options": [
         {
           "value": "0",
@@ -443,7 +443,7 @@
         "es": "Nombres de las funciones al añadir un dispositivo y textos de los eventos de escena."
       },
       "required": false,
-      "default": "en",
+      "default": "fr",
       "options": [
         {
           "value": "en",

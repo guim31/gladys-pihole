@@ -26,6 +26,7 @@ const TWO_SERVERS = {
   server_2_url: URL_2,
   server_2_password: 'secret',
   server_2_name: 'Secondary',
+  language: 'en',
 };
 
 async function world(t, options = {}) {
@@ -114,8 +115,27 @@ test('the switch pauses the blocking (or for the configured time) and resumes it
   assert.equal((await w.fake.setValue(device, counter, 1)).success, false);
 });
 
-test('the switch turned off without a configured time: until turned back on', async (t) => {
-  const w = await world(t);
+test('the switch turned off: a 5-minute pause by default, or until turned back on', async (t) => {
+  const byDefault = await world(t, {
+    config: { server_1_url: URL_1, server_1_password: 'secret' },
+  });
+  await createAll(byDefault);
+  const [first] = byDefault.fake.devices;
+  await byDefault.fake.setValue(
+    first,
+    first.features.find((f) => f.external_id.endsWith(':blocking')),
+    0,
+  );
+  assert.deepEqual(byDefault.server.requests.at(-1).body, { blocking: false, timer: 300 });
+
+  const w = await world(t, {
+    config: {
+      server_1_url: URL_1,
+      server_1_password: 'secret',
+      server_1_name: 'Pi-hole',
+      switch_off_minutes: '0',
+    },
+  });
   await createAll(w);
   const [device] = w.fake.devices;
   const feature = device.features.find((f) => f.external_id.endsWith(':blocking'));

@@ -16,8 +16,10 @@ the notes of the version's GitHub Release.
   the DNS queries, blocked queries and share blocked over the last 24 hours,
   the active clients, the domains on the blocklists and the number of updates
   available.
-- Turning the blocking switch off disables the blocking until it is turned
-  back on, or pauses it for 5 to 60 minutes, as chosen in the configuration.
+- Turning the blocking switch off pauses the blocking for 5 minutes by
+  default; 15, 30 or 60 minutes, or until it is turned back on, can be chosen
+  in the configuration. Feature names are in French by default (English,
+  German and Spanish available).
 - A "Pi-hole" dashboard widget: the 24 h figures of every server or of one,
   the state of each server, and Pause 5 min, Pause 30 min, Pause… (a typed
   duration, Gladys 5.2.0 or later) and Resume buttons.
@@ -33,5 +35,6 @@ the notes of the version's GitHub Release.
 - App passwords, the web interface password or no password; HTTPS with
   self-signed certificates on request.
 - Interface texts and documentation in English, French, German and Spanish.
+- Apache-2.0 `LICENSE` file.
 
 [Unreleased]: https://github.com/guim31/gladys-pihole/commits/main
