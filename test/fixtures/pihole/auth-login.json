@@ -5,7 +5,7 @@
     "sid": "c2lkLWZvci10ZXN0cy0wMQ=",
     "csrf": "Y3NyZi1mb3ItdGVzdHMtMDE=",
     "validity": 1800,
-    "message": "app-password correct"
+    "message": "password correct"
   },
   "took": 0.003
 }

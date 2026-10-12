@@ -103,24 +103,32 @@ links it from the Configuration screen.
   self-signed certificate for one server only. Certificates are checked unless
   the user ticks the option.
 
-## Not verified on a real Pi-hole
+## Checked on a real Pi-hole, and what was not
 
-Developed without a Pi-hole at hand: the tests run against an in-memory Pi-hole
-built from the examples of the OpenAPI specification. To check on a real
-server:
+The tests run against an in-memory Pi-hole built from the examples of the
+OpenAPI specification, plus answers recorded from a real Pi-hole
+(`test/fixtures/pihole/real/`). On 12/10/2026 the Docker image of the
+integration was also run with the Gladys sandbox constraints (read-only root,
+all capabilities dropped, 256 MB, bridge network) against a real Pi-hole
+(`pihole/pihole` 2026.09.0: Core v6.4.3, FTL v6.7.1, Web v6.6) in a container:
 
-- the exact answer of `POST /api/auth` with an app password, and with the web
-  password when two-factor authentication is on (expected: `400` "No 2FA token
-  found in JSON payload");
-- that an app password session may change the blocking with
-  `webserver.api.app_sudo` left off (the default);
-- the `timer` value of `GET /api/dns/blocking` during a pause (remaining
-  seconds, decimal);
-- the answer of a Pi-hole v5 to `POST /api/auth` (expected: `404`, then
-  `admin/api.php?version` answering `{"version": 3}`);
-- `/api/info/version` in Docker, where `docker.local` holds the image tag;
-- whether some installations redirect HTTP to HTTPS (handled as an error asking
-  for the `https://` address).
+- checked: login with an app password and with the web password, one session
+  reused, re-login after an invalid session, logout (`DELETE /api/auth`, no
+  session left behind), summary, versions in Docker, pause with a timer (the
+  remaining time comes back as a decimal, e.g. `56.99…`), automatic end of a
+  pause, resume, wrong password, no password, HTTPS with the self-signed
+  certificate refused then accepted with the option, address that does not
+  answer; the whole integration (with the SDK's fake Gladys) discovering two
+  servers, publishing states, serving the widget, pausing from a scene and
+  firing the trigger; about 20 MB of memory at rest;
+- found and fixed: after a refused password, Pi-hole rate-limits login
+  attempts within a second, so a refused password is now tried again only
+  after five minutes (or as soon as a new password is saved);
+- not checked: two-factor authentication on the web password (expected: `400`
+  "No 2FA token found in JSON payload"), a Pi-hole v5 (expected: `404` on
+  `/api/auth`, then `admin/api.php?version`), a Pi-hole installed without
+  Docker (updates of each component), HTTP to HTTPS redirects, and the widget
+  and its _Pause…_ form in a real Gladys.
 
 ## Limitations
 

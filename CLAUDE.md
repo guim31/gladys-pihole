@@ -228,6 +228,13 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
   `node:https` et `rejectUnauthorized: false` requête par requête, seulement si la case est cochée.
 - Le **déclencheur « ne répond plus »** ne compte que le silence (connexion refusée, délai) : un
   mot de passe refusé est un problème de configuration, signalé par l'état de connexion.
+- **Limitation des connexions** (vu sur un vrai Pi-hole 6.4 en conteneur) : après un mot de passe
+  refusé, la tentative suivante, moins d'une seconde après, reçoit un 429 « Rate-limiting login
+  attempts ». Le client ne retente donc un mot de passe refusé qu'après 5 minutes (1 minute après
+  un 429) ; un nouveau mot de passe enregistré crée un nouveau client, sans attente.
+- Réponses réelles enregistrées dans `test/fixtures/pihole/real/` (Pi-hole Docker 2026.09.0) :
+  `POST /api/auth` refusé n'a **pas** de champ `csrf` ; le `timer` d'une pause est décimal
+  (`56.99999999999996`) ; `admin/api.php?version` répond 400 sur un v6.
 - Les mises à jour déjà annoncées sont gardées dans `/data/pihole-state.json` pour ne pas les
   annoncer à chaque redémarrage.
 

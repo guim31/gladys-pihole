@@ -105,3 +105,18 @@ test('unknown latest versions are no update', () => {
   assert.deepEqual(parseVersions(data).updates, []);
   assert.deepEqual(parseVersions({}), { version: null, docker: false, updates: [] });
 });
+
+test('answers of a real Pi-hole 6.4 (Docker)', () => {
+  const versions = parseVersions(fixture('real/version-docker'));
+  assert.deepEqual(versions, { version: 'v6.4.3', docker: true, updates: [] });
+  assert.deepEqual(parseBlocking(fixture('real/blocking-paused')), {
+    blocking: 'disabled',
+    timer: 56.99999999999996,
+  });
+  const summary = parseSummary(fixture('real/stats-summary-empty'));
+  assert.equal(summary.queries, 0);
+  assert.equal(summary.percentBlocked, 0);
+  assert.equal(summary.domainsBlocked, 72526);
+  assert.equal(fixture('real/auth-login').session.validity, 1800);
+  assert.equal(fixture('real/auth-wrong-password').session.valid, false);
+});

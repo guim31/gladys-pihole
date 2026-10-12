@@ -33,7 +33,8 @@ the notes of the version's GitHub Release.
   and the problem (password refused, two-factor authentication, certificate,
   Pi-hole v5 not supported…).
 - App passwords, the web interface password or no password; HTTPS with
-  self-signed certificates on request.
+  self-signed certificates on request. A refused password is tried again
+  after five minutes only, so Pi-hole does not rate-limit the logins.
 - Interface texts and documentation in English, French, German and Spanish.
 - Apache-2.0 `LICENSE` file.
 

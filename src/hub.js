@@ -152,6 +152,7 @@ export class PiholeHub {
         password: server.password,
         insecure: config.allowSelfSigned,
         request: this.request,
+        now: this.now,
       }),
       snapshot: { reachable: null, blocking: null, timer: null, summary: null, versions: null },
       error: null,

@@ -43,6 +43,16 @@ export class PiholeError extends Error {
   }
 }
 
+// After a refused password, Pi-hole rate-limits the login attempts of the
+// client within a second (429 "Rate-limiting login attempts", seen on a real
+// Pi-hole 6.4): wait before trying the same password again. A new password
+// typed in the configuration makes a new client, without this wait.
+export const LOGIN_BACKOFF_MS = Object.freeze({
+  [ERROR_KINDS.AUTH]: 5 * 60_000,
+  [ERROR_KINDS.TOTP]: 5 * 60_000,
+  [ERROR_KINDS.RATE_LIMIT]: 60_000,
+});
+
 const TLS_CODES = new Set([
   'DEPTH_ZERO_SELF_SIGNED_CERT',
   'SELF_SIGNED_CERT_IN_CHAIN',
@@ -75,8 +85,16 @@ export class PiholeClient {
    * @param {boolean} [options.insecure] accept a self-signed certificate
    * @param {typeof httpRequest} [options.request] test seam
    * @param {number} [options.timeoutMs]
+   * @param {() => number} [options.now]
    */
-  constructor({ url, password = '', insecure = false, request = httpRequest, timeoutMs = 10_000 }) {
+  constructor({
+    url,
+    password = '',
+    insecure = false,
+    request = httpRequest,
+    timeoutMs = 10_000,
+    now = () => Date.now(),
+  }) {
     this.url = url;
     this.password = password;
     this.insecure = insecure;
@@ -85,6 +103,9 @@ export class PiholeClient {
     this.sid = null;
     this.loggedIn = false;
     this.loggingIn = null;
+    this.now = now;
+    this.loginError = null;
+    this.loginBlockedUntil = 0;
   }
 
   // --- Transport ---------------------------------------------------------------
@@ -125,6 +146,23 @@ export class PiholeClient {
   async doLogin() {
     this.sid = null;
     this.loggedIn = false;
+    if (this.loginError && this.now() < this.loginBlockedUntil) {
+      throw this.loginError;
+    }
+    try {
+      await this.authenticate();
+      this.loginError = null;
+    } catch (err) {
+      const backoff = LOGIN_BACKOFF_MS[err.kind];
+      if (backoff) {
+        this.loginError = err;
+        this.loginBlockedUntil = this.now() + backoff;
+      }
+      throw err;
+    }
+  }
+
+  async authenticate() {
     const { status, data } = await this.send('POST', '/api/auth', {
       json: { password: this.password },
     });

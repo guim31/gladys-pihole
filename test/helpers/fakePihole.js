@@ -145,6 +145,9 @@ export class FakePihole {
       return json(200, fixture('auth-no-password'));
     }
     this.logins += 1;
+    if (this.rateLimited) {
+      return json(429, fixture('auth-rate-limit'));
+    }
     if (!this.password) {
       return json(200, fixture('auth-no-password'));
     }

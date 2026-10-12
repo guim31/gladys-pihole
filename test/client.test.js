@@ -174,3 +174,26 @@ test('logout deletes the session and frees the seat', async () => {
   await client.getSummary().catch(() => {});
   await client.logout();
 });
+
+test('a refused password is not tried again for five minutes', async () => {
+  let time = 0;
+  const { server, client } = setup({ password: 'other' }, { now: () => time });
+  await rejectsWith(client.getSummary(), ERROR_KINDS.AUTH);
+  await rejectsWith(client.getSummary(), ERROR_KINDS.AUTH);
+  assert.equal(server.logins, 1, 'the second read did not try the password again');
+  time += 5 * 60_000;
+  server.password = 'secret';
+  await client.getSummary();
+  assert.equal(server.logins, 2);
+});
+
+test('a rate-limited login waits one minute', async () => {
+  let time = 0;
+  const { server, client } = setup({}, { now: () => time });
+  server.rateLimited = true;
+  await rejectsWith(client.getSummary(), ERROR_KINDS.RATE_LIMIT);
+  server.rateLimited = false;
+  await rejectsWith(client.getSummary(), ERROR_KINDS.RATE_LIMIT);
+  time += 60_000;
+  await client.getSummary();
+});
