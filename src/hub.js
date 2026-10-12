@@ -169,6 +169,7 @@ export class PiholeHub {
   }
 
   dropRecord(record) {
+    record.dropped = true;
     clearTimeout(record.retryTimer);
     clearTimeout(record.pauseTimer);
     for (const { externalId } of featureValues(this.gladys, record.server.slot, {})) {
@@ -255,8 +256,13 @@ export class PiholeHub {
    * @returns {Promise<boolean>} whether the widget shows something new
    */
   poll(record, { versions }) {
-    record.polling ??= this.read(record, { versions }).finally(() => {
+    record.polling ??= this.read(record, { versions }).finally(async () => {
       record.polling = null;
+      if (record.dropped) {
+        // Removed from the configuration while it was being read: the read
+        // may have opened a new session, free it.
+        await record.client.logout();
+      }
     });
     return record.polling;
   }
@@ -294,6 +300,9 @@ export class PiholeHub {
   }
 
   async applySuccess(record, next, { origin } = {}) {
+    if (record.dropped) {
+      return false;
+    }
     let widgetChanged = record.snapshot.reachable !== true || record.error !== null;
     if (record.down) {
       const downMinutes = Math.round((this.now() - record.downSince) / 60_000);
@@ -319,6 +328,9 @@ export class PiholeHub {
   }
 
   async applyFailure(record, err) {
+    if (record.dropped) {
+      return false;
+    }
     const wasError = record.error?.kind;
     record.error = { kind: err.kind, message: err.message };
     record.snapshot = { ...record.snapshot, reachable: false };

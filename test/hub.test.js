@@ -439,3 +439,15 @@ test('the store survives a corrupt file', async () => {
   writeFileSync(join(dir, 'pihole-state.json'), '{not json');
   assert.deepEqual(await new Store(dir).load(), {});
 });
+
+test('a server removed while it is being read publishes nothing and keeps no session', async (t) => {
+  const w = await world(t);
+  const sent = w.fake.states.length;
+  w.server.expireSessions();
+  w.server.summary.queries.total = 9000;
+  const reading = w.hub.pollAll();
+  await w.fake.configUpdated({ server_1_url: '' });
+  await reading;
+  assert.equal(w.fake.states.length, sent);
+  assert.equal(w.server.sessions.size, 0);
+});
