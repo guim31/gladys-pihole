@@ -1,8 +1,8 @@
 // -----------------------------------------------------------------------------
 // A complete test world: the SDK's fake Gladys, fake Pi-hole servers on a fake
 // network, a temporary /data and a manual clock, with the integration wired
-// on top through registerHandlers. No timer runs: the tests read the servers
-// with `world.hub.pollAll()`.
+// on top through registerHandlers. No timer runs unless `timers: true` (with
+// node:test mock timers): the tests read the servers with `world.hub.pollAll()`.
 // -----------------------------------------------------------------------------
 
 import { mkdtempSync } from 'node:fs';
@@ -51,13 +51,14 @@ export async function createWorld({
   connect = true,
   dataDir = mkdtempSync(join(tmpdir(), 'gladys-pihole-')),
   timings = {},
+  timers = false,
 } = {}) {
   const network = createNetwork(servers ?? { [URL_1]: new FakePihole({ now: clock.now }) });
   const gladys = createFakeGladys({ config, devices });
   const app = registerHandlers(gladys, {
     store: new Store(dataDir),
     request: network.request,
-    timers: false,
+    timers,
     timings,
     now: clock.now,
   });

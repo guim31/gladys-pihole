@@ -69,6 +69,19 @@ function networkError(err) {
   return new PiholeError(ERROR_KINDS.UNREACHABLE, err.code ? `${err.code}` : err.message);
 }
 
+/** A redirect target fit for the logs: no user, password or query string. */
+export function safeLocation(location) {
+  if (typeof location !== 'string' || location === '') {
+    return '?';
+  }
+  try {
+    const url = new URL(location, 'http://relative.invalid');
+    return url.host === 'relative.invalid' ? url.pathname : `${url.origin}${url.pathname}`;
+  } catch {
+    return '?';
+  }
+}
+
 function parseJson(response) {
   try {
     return JSON.parse(response.body);
@@ -125,7 +138,7 @@ export class PiholeClient {
     }
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers?.location;
-      throw new PiholeError(ERROR_KINDS.REDIRECT, `Redirected to ${location ?? '?'}`, {
+      throw new PiholeError(ERROR_KINDS.REDIRECT, `Redirected to ${safeLocation(location)}`, {
         status: response.status,
         location,
       });

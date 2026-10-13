@@ -164,8 +164,12 @@ steuern, die ein Gerät bedient.
 - **„antwortet nicht“**: Prüfe, ob sich `http://<Adresse>/admin` von einem
   Computer im Netzwerk von Gladys öffnen lässt. Namen mit `.local` funktionieren
   in der Integration meist nicht: Verwende die IP-Adresse.
-- Die Integration protokolliert, was sie tut: Öffne die Protokolle der
-  Integration in der Gladys-Oberfläche. Dein Passwort schreibt sie nie hinein.
+- Protokolle: auf der Seite der Integration in Gladys oder mit `docker logs`
+  auf dem Host. Dort stehen der Start, jeder verlorene und wieder erreichbare
+  Server, die Probleme (jedes einmal, nicht bei jedem Lesen) und deine Befehle
+  zum Pausieren und Fortsetzen. Starte den Container mit `LOG_LEVEL=debug`, um
+  jedes Lesen und jeden neuen Versuch zu sehen. Dein Passwort und die
+  API-Sitzung erscheinen nie in den Protokollen.
 
 ## Grenzen
 

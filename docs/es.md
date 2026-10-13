@@ -161,8 +161,11 @@ estándar de Gladys que controla un dispositivo.
 - **«no responde»**: compruebe que `http://<dirección>/admin` se abre desde un
   ordenador de la red de Gladys. Los nombres terminados en `.local` no suelen
   funcionar dentro de la integración: use la dirección IP.
-- La integración registra lo que hace: abra los registros de la integración
-  desde la interfaz de Gladys. Nunca escribe su contraseña en ellos.
+- Registros: en la página de la integración en Gladys, o `docker logs` en el
+  host. Muestran el inicio, cada servidor perdido y recuperado, los problemas
+  (una vez cada uno, no en cada lectura) y sus órdenes de pausa y reanudación.
+  Inicie el contenedor con `LOG_LEVEL=debug` para ver cada lectura y cada nuevo
+  intento. Su contraseña y la sesión de API nunca aparecen en los registros.
 
 ## Limitaciones
 
