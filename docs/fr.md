@@ -166,8 +166,12 @@ standard de Gladys qui contrôle un appareil.
 - **« ne répond pas »** : vérifiez que `http://<adresse>/admin` s'ouvre depuis
   un ordinateur du réseau de Gladys. Les noms en `.local` ne fonctionnent
   généralement pas dans l'intégration : utilisez l'adresse IP.
-- L'intégration journalise ce qu'elle fait : ouvrez les logs de l'intégration
-  depuis l'interface de Gladys. Elle n'y écrit jamais votre mot de passe.
+- Logs : dans la page de l'intégration de Gladys, ou `docker logs` sur l'hôte.
+  Ils montrent le démarrage, chaque serveur perdu puis revenu, les problèmes
+  (une fois chacun, pas à chaque lecture) et vos commandes de pause et de
+  reprise. Lancez le conteneur avec `LOG_LEVEL=debug` pour voir chaque lecture
+  et chaque nouvel essai. Votre mot de passe et la session d'API n'apparaissent
+  jamais dans les logs.
 
 ## Limites
 

@@ -10,6 +10,21 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Changed
+
+- Quieter logs: at the default level they show the start, each Pi-hole lost
+  and back, the problems once each (not at every reading) and your pause and
+  resume commands. Start the container with `LOG_LEVEL=debug` to see every
+  reading and every retry (see Troubleshooting in the documentation).
+
+### Fixed
+
+- When the update check of a Pi-hole failed, it was tried again and logged at
+  every reading: it is now tried again an hour later, and logged once.
+- A Pi-hole that came back after a refused password or a single missed reading
+  is now logged as back.
+- A redirect address is logged without user name, password or query string.
+
 ## [1.0.0] - 2026-10-12
 
 ### Added

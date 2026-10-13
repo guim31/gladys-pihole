@@ -33,7 +33,7 @@ pushing.
 ```
 index.js                          SDK wiring only: src/app.js registers the handlers before connect()
 src/app.js                        every SDK handler -> the hub (also used by the tests)
-src/hub.js                        servers, reading timer, states, transitions -> scene events, commands
+src/hub.js                        servers, reading timer, states, transitions -> scene events, commands, deduplicated logs
 src/devices.js                    one device per configured server: features, names (4 languages), values
 src/pihole/client.js              Pi-hole v6 REST client: session (sid), re-login on 401, errors by kind
 src/pihole/http.js                node:http/https request (self-signed certificates on request)
@@ -117,6 +117,11 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
   15000, 30000, 60000). Le template publie `poll_frequency: 300` sans `should_poll` : c'est faux,
   le cœur répond 400 à la découverte. Pour une cadence hors liste, publier `should_poll: false` et
   pousser les états depuis le conteneur, en gardant un `onPoll` de repli.
+- **Piège du polling du cœur 5.2.0** (GladysAssistant/Gladys#3198, correctif #3199 pas encore
+  publié) : les appareils **créés sans `should_poll`** ne sont **jamais** sondés, même après la
+  correction ; seul un appareil `should_poll: true` avec une `poll_frequency` de la liste l'est.
+  Ici : `should_poll: false` et minuteur interne du hub (`schedulePoll`), `onPoll` de repli
+  seulement. `test/timer.test.js` prouve que le minuteur lit les serveurs sans aucun `onPoll`.
 - **`min` et `max` sont NOT NULL** dans `t_device_feature`, y compris pour `text/text` : sans eux,
   « Ajouter à Gladys » échoue en HTTP 422. Mettre 0/0, comme Zigbee2MQTT.
 - Un état publié sur une fonctionnalité **pas encore ajoutée** dans Gladys reçoit un 200 puis est
@@ -237,6 +242,16 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
   (`56.99999999999996`) ; `admin/api.php?version` répond 400 sur un v6.
 - Les mises à jour déjà annoncées sont gardées dans `/data/pihole-state.json` pour ne pas les
   annoncer à chaque redémarrage.
+- **Logs** : le logger du SDK lit `LOG_LEVEL` (`debug|info|warn|error|silent`, `info` par
+  défaut). En `info`, seulement le cycle de vie : serveur connecté, perdu (`warn` au premier
+  échec), revenu (une ligne), mise à jour disponible (une fois par version), une ligne par
+  commande de pause/reprise. Un problème qui se répète (lecture, vérification de version, états,
+  transports, état de connexion, événements de scène refusés par Gladys, erreurs du minuteur)
+  passe par `hub.problem(key, …)` : une ligne à son niveau, puis `debug` jusqu'à
+  `hub.resolved(key)`. Une vérification de version en échec n'est retentée qu'une heure après.
+  Jamais le mot de passe ni le `sid` ; une adresse de redirection est réduite par
+  `safeLocation` (ni identifiants ni requête). `test/logs.test.js` vérifie qu'un cycle normal
+  n'écrit rien en `info` et que les échecs répétés ne s'écrivent qu'une fois.
 
 ## Store
 

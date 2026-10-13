@@ -5,7 +5,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ERROR_KINDS, PiholeClient } from '../src/pihole/client.js';
+import { ERROR_KINDS, PiholeClient, safeLocation } from '../src/pihole/client.js';
 import { FakePihole } from './helpers/fakePihole.js';
 
 const URL = 'http://192.0.2.10';
@@ -196,4 +196,13 @@ test('a rate-limited login waits one minute', async () => {
   await rejectsWith(client.getSummary(), ERROR_KINDS.RATE_LIMIT);
   time += 60_000;
   await client.getSummary();
+});
+
+test('a redirect target is logged without credentials nor query string', () => {
+  assert.equal(
+    safeLocation('https://user:pw@192.0.2.10:8443/admin/?sid=abc'),
+    'https://192.0.2.10:8443/admin/',
+  );
+  assert.equal(safeLocation('/admin/login?x=1'), '/admin/login');
+  assert.equal(safeLocation(undefined), '?');
 });

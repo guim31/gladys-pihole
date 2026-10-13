@@ -153,8 +153,11 @@ controls a device.
 - **"does not answer"**: check that `http://<address>/admin` opens from a
   computer on the network of Gladys. Names ending in `.local` usually do not
   work inside the integration: use the IP address.
-- The integration logs what it does: open the integration logs from the Gladys
-  interface. It never logs your password.
+- Logs: on the page of the integration in Gladys, or `docker logs` on the host.
+  They show the start, each server lost and back, the problems (once each, not
+  at every reading) and your pause and resume commands. Start the container
+  with `LOG_LEVEL=debug` to see every reading and every retry. Your password
+  and the API session never appear in the logs.
 
 ## Limits
 

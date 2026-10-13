@@ -97,6 +97,31 @@ export class PiholeHub {
     this.saved = { announcedUpdates: {} };
     this.pollTimer = null;
     this.stopped = false;
+    /** Problems already logged as warnings, by key: repeats go to debug. */
+    this.warned = new Set();
+  }
+
+  // --- Logs ------------------------------------------------------------------
+  // Info keeps the lifecycle only (servers connected, lost, back, user
+  // commands). A problem that repeats every cycle is logged once at its own
+  // level, then at debug until it clears. LOG_LEVEL=debug shows everything.
+
+  /** Log a problem once (`level` warn or error), its repeats at debug. */
+  problem(key, message, err, level = 'warn') {
+    const args = err === undefined ? [message] : [message, err];
+    if (this.warned.has(key)) {
+      logger.debug(...args);
+      return;
+    }
+    this.warned.add(key);
+    logger[level](...args);
+  }
+
+  /** The problem `key` is gone: the next occurrence is logged again. */
+  resolved(key, message) {
+    if (this.warned.delete(key) && message) {
+      logger.info(message);
+    }
   }
 
   // --- Lifecycle -------------------------------------------------------------
@@ -200,8 +225,9 @@ export class PiholeHub {
     this.pollTimer = setTimeout(async () => {
       try {
         await this.pollAll();
+        this.resolved('poll');
       } catch (err) {
-        logger.error('Poll failed', err);
+        this.problem('poll', 'Poll failed', err, 'error');
       }
       this.schedulePoll();
     }, this.config.pollIntervalMs);
@@ -276,11 +302,18 @@ export class PiholeHub {
         due ? record.client.getVersions().catch((err) => err) : null,
       ]);
       let versionsSnapshot = record.snapshot.versions;
+      const versionsKey = `versions:${record.server.slot}`;
       if (versionInfo && !(versionInfo instanceof Error)) {
         versionsSnapshot = parseVersions(versionInfo);
         record.versionsAt = this.now();
+        this.resolved(versionsKey);
       } else if (versionInfo instanceof Error) {
-        logger.warn(`${this.label(record)}: version check failed: ${versionInfo.message}`);
+        // Tried again at the next version check, not at every reading.
+        record.versionsAt = this.now();
+        this.problem(
+          versionsKey,
+          `${this.label(record)}: version check failed: ${versionInfo.message}`,
+        );
       }
       return await this.applySuccess(record, {
         ...parseBlocking(blocking),
@@ -308,6 +341,10 @@ export class PiholeHub {
       const downMinutes = Math.round((this.now() - record.downSince) / 60_000);
       logger.info(`${this.label(record)} answers again after ${downMinutes} min`);
       await this.fire(TRIGGERS.RECOVERED, record, { down_minutes: downMinutes });
+    } else if (record.error) {
+      logger.info(`${this.label(record)}: connection restored`);
+    } else if (record.snapshot.reachable === null) {
+      logger.info(`${this.label(record)}: connected`);
     }
     record.failures = 0;
     record.down = false;
@@ -334,8 +371,11 @@ export class PiholeHub {
     const wasError = record.error?.kind;
     record.error = { kind: err.kind, message: err.message };
     record.snapshot = { ...record.snapshot, reachable: false };
+    // One warning when the problem starts (or changes), not one per reading.
     if (wasError !== err.kind) {
       logger.warn(`${this.label(record)}: ${err.message}`);
+    } else {
+      logger.debug(`${this.label(record)}: ${err.message} (again)`);
     }
     // Only silence counts as down: a refused password is a configuration
     // problem, reported by the connection status.
@@ -365,7 +405,8 @@ export class PiholeHub {
     record.retryTimer = setTimeout(() => {
       this.poll(record, { versions: false })
         .then((changed) => this.afterChanges(changed))
-        .catch((err) => logger.error('Retry failed', err));
+        .then(() => this.resolved('retry'))
+        .catch((err) => this.problem('retry', 'Retry failed', err, 'error'));
     }, this.timings.retryMs);
     record.retryTimer.unref?.();
   }
@@ -384,7 +425,8 @@ export class PiholeHub {
     record.pauseTimer = setTimeout(() => {
       this.poll(record, { versions: false })
         .then((changed) => this.afterChanges(changed))
-        .catch((err) => logger.error('Pause end check failed', err));
+        .then(() => this.resolved('pause-end'))
+        .catch((err) => this.problem('pause-end', 'Pause end check failed', err, 'error'));
     }, delay);
     record.pauseTimer.unref?.();
   }
@@ -448,8 +490,9 @@ export class PiholeHub {
         server: serverName(record.server),
         ...data,
       });
+      this.resolved('scene-event');
     } catch (err) {
-      logger.warn(`Scene event ${key} refused: ${err.message}`);
+      this.problem('scene-event', `Scene event ${key} refused: ${err.message}`);
     }
   }
 
@@ -474,8 +517,9 @@ export class PiholeHub {
         for (const state of batch) {
           this.published.set(state.device_feature_external_id, state.state);
         }
+        this.resolved('states');
       } catch (err) {
-        logger.warn(`States of ${this.label(record)} refused: ${err.message}`);
+        this.problem('states', `States of ${this.label(record)} refused: ${err.message}`);
       }
     }
   }
@@ -510,8 +554,9 @@ export class PiholeHub {
       for (const entry of entries) {
         this.transports.set(entry.external_id, entry.transport);
       }
+      this.resolved('transports');
     } catch (err) {
-      logger.warn(`Transports refused: ${err.message}`);
+      this.problem('transports', `Transports refused: ${err.message}`);
     }
   }
 
@@ -555,8 +600,9 @@ export class PiholeHub {
     try {
       await this.gladys.setConnectionStatus(status.connected, status.message);
       this.connection = key;
+      this.resolved('connection-status');
     } catch (err) {
-      logger.warn(`Connection status refused: ${err.message}`);
+      this.problem('connection-status', `Connection status refused: ${err.message}`);
     }
   }
 
